@@ -17,6 +17,9 @@ using namespace glm;
 // 3D Models
 C3dglTerrain terrain, road;
 
+//GLSL Program
+C3dglProgram program;
+
 // The View Matrix
 mat4 matrixView;
 
@@ -34,9 +37,28 @@ bool init()
 	glShadeModel(GL_SMOOTH);	// smooth shading mode is the default one; try GL_FLAT here!
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);	// this is the default one; try GL_LINE!
 
-	// setup lighting
-	glEnable(GL_LIGHTING);									// --- DEPRECATED
-	glEnable(GL_LIGHT0);									// --- DEPRECATED
+
+	// Initialise Shaders
+
+	C3dglShader vertexShader;
+	C3dglShader fragmentShader;
+
+
+	if (!vertexShader.create(GL_VERTEX_SHADER)) return false;
+	if (!vertexShader.loadFromFile("shaders/basic.vert")) return false;
+	if (!vertexShader.compile()) return false;
+	if (!fragmentShader.create(GL_FRAGMENT_SHADER)) return false;
+	if (!fragmentShader.loadFromFile("shaders/basic.frag")) return false;
+	if (!fragmentShader.compile()) return false;
+	if (!program.create()) return false;
+	if (!program.attach(vertexShader)) return false;
+	if (!program.attach(fragmentShader)) return false;
+	if (!program.link()) return false;
+	if (!program.use(true)) return false;
+
+	// glut additional setup
+	glutSetVertexAttribCoord3(program.getAttribLocation("aVertex"));
+	glutSetVertexAttribNormal(program.getAttribLocation("aNormal"));
 
 	// load your 3D models here!
 	if (!terrain.load("models\\heightmap.bmp", 10)) return false;
@@ -68,18 +90,14 @@ void renderScene(mat4& matrixView, float time, float deltaTime)
 	mat4 m;
 
 	// setup materials - green (grass)
-	GLfloat rgbaGreen[] = { 0.2f, 0.8f, 0.2f };				// --- DEPRECATED
-	glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, rgbaGreen);	// --- DEPRECATED
-	glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, rgbaGreen);	// --- DEPRECATED
+	program.sendUniform("material", vec3(0.2f, 0.8f, 0.2f));
 
 	// render the terrain
 	m = translate(matrixView, vec3(0, 0, 0));
 	terrain.render(m);
 
 	// setup materials - grey (road)
-	GLfloat rgbaGrey[] = { 0.3f, 0.3f, 0.16f };				// --- DEPRECATED
-	glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, rgbaGrey);	// --- DEPRECATED
-	glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, rgbaGrey);	// --- DEPRECATED
+	program.sendUniform("material", vec3(0.3f, 0.3f, 0.16f));
 
 	// render the road
 	m = translate(matrixView, vec3(0, 0, 0));
@@ -132,9 +150,7 @@ void onReshape(int w, int h)
 	mat4 matrixProjection = perspective(radians(_fov), ratio, 0.02f, 1000.f);
 
 	// Setup the Projection Matrix
-	glMatrixMode(GL_PROJECTION);							// --- DEPRECATED
-	glLoadIdentity();										// --- DEPRECATED
-	glMultMatrixf((GLfloat*)&matrixProjection);				// --- DEPRECATED
+	program.sendUniform("matrixProjection", matrixProjection);
 }
 
 // Handle WASDQE keys

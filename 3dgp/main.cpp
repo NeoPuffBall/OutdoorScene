@@ -19,6 +19,10 @@ C3dglTerrain terrain, road;
 C3dglModel Lamp1, Lamp2, Lamp3;
 C3dglModel Bulb1, Bulb2, Bulb3;
 
+C3dglBitmap grass;
+
+GLuint idTexgrass;
+
 //GLSL Program
 C3dglProgram program;
 
@@ -72,6 +76,14 @@ bool init()
 	if (!Bulb2.load("models\\sphere.obj")) return false;
 	if (!Bulb3.load("models\\sphere.obj")) return false;
 
+	glActiveTexture(GL_TEXTURE0);
+	glGenTextures(1, &idTexgrass);
+	glBindTexture(GL_TEXTURE_2D, idTexgrass);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, grass.getWidth(), grass.getHeight(), 0, GL_RGBA,
+		GL_UNSIGNED_BYTE, grass.getBits());
+	program.sendUniform("texture0",0);
+
 	// Initialise the View Matrix (initial position of the camera)
 	matrixView = rotate(mat4(1), radians(12.f), vec3(1, 0, 0));
 	matrixView *= lookAt(
@@ -98,6 +110,9 @@ void renderScene(mat4& matrixView, float time, float deltaTime)
 	mat4 m;
 	vec3 lampsize = vec3(0.025f, 0.025f, 0.025f);
 	vec3 bulbsize = vec3(0.015f, 0.015f, 0.015f);
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, idTexgrass);
 
 	// setup materials - green (grass)
 	program.sendUniform("materialDiffuse", vec3(0.2f, 0.8f, 0.2f));
@@ -179,7 +194,10 @@ void onRender()
 		* matrixView;
 
 	program.sendUniform("lightDir.direction", vec3(1.0, 0.5, 1.0));
-	program.sendUniform("lightDir.diffuse", vec3(1, 1, 1)); // dimmed white light
+	program.sendUniform("lightDir.diffuse", vec3(1, 1, 1));
+
+	program.sendUniform("lightPoint.position", vec3(250, 440.0f, 1325));
+	program.sendUniform("lightPoint.diffuse", vec3(1.0f, 1.0f, 1.0f));
 	// setup View Matrix
 	program.sendUniform("matrixView", matrixView);
 	program.sendUniform("materialDiffuse", vec3(0.2, 0.2, 0.6));

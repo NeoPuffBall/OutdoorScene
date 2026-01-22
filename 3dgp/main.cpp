@@ -100,14 +100,14 @@ void renderScene(mat4& matrixView, float time, float deltaTime)
 	vec3 bulbsize = vec3(0.015f, 0.015f, 0.015f);
 
 	// setup materials - green (grass)
-	program.sendUniform("material", vec3(0.2f, 0.8f, 0.2f));
+	program.sendUniform("materialDiffuse", vec3(0.2f, 0.8f, 0.2f));
 
 	// render the terrain
 	m = translate(matrixView, vec3(0, 0, 0));
 	terrain.render(m);
 
 	// setup materials - grey (road)
-	program.sendUniform("material", vec3(0.3f, 0.3f, 0.16f));
+	program.sendUniform("materialDiffuse", vec3(0.3f, 0.3f, 0.16f));
 
 	// render the road
 	m = translate(matrixView, vec3(0, 0, 0));
@@ -115,7 +115,7 @@ void renderScene(mat4& matrixView, float time, float deltaTime)
 	road.render(m);
 
 	// setup materials - black
-	program.sendUniform("material", vec3(0, 0, 0));
+	program.sendUniform("materialDiffuse", vec3(0, 0, 0));
 
 	//render lamp1
 	m = matrixView;
@@ -137,7 +137,7 @@ void renderScene(mat4& matrixView, float time, float deltaTime)
 	Lamp3.render(m);
 
 	//setup materials - dark grey
-	program.sendUniform("material", vec3(0.15f, 0.15f, 0.15f));
+	program.sendUniform("materialDiffuse", vec3(0.15f, 0.15f, 0.15f));
 
 	//render Bulb1
 	m = matrixView;
@@ -177,6 +177,12 @@ void onRender()
 		_vel * deltaTime),		// animate camera motion (controlled by WASD keys)
 		-pitch, vec3(1, 0, 0))	// switch the pitch on
 		* matrixView;
+
+	program.sendUniform("lightDir.direction", vec3(1.0, 0.5, 1.0));
+	program.sendUniform("lightDir.diffuse", vec3(1, 1, 1)); // dimmed white light
+	// setup View Matrix
+	program.sendUniform("matrixView", matrixView);
+	program.sendUniform("materialDiffuse", vec3(0.2, 0.2, 0.6));
 
 	// move the camera up following the profile of terrain (Y coordinate of the terrain)
 	float terrainY = -terrain.getInterpolatedHeight(inverse(matrixView)[3][0], inverse(matrixView)[3][2]);

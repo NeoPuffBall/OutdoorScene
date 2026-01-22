@@ -9,6 +9,7 @@ uniform vec3 material;
 in vec3 aVertex;
 in vec3 aNormal;
 
+
 out vec4 color;
 
 void main(void) 

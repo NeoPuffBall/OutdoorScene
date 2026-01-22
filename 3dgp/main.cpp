@@ -16,6 +16,8 @@ using namespace glm;
 
 // 3D Models
 C3dglTerrain terrain, road;
+C3dglModel Lamp1, Lamp2, Lamp3;
+C3dglModel Bulb1, Bulb2, Bulb3;
 
 //GLSL Program
 C3dglProgram program;
@@ -63,6 +65,12 @@ bool init()
 	// load your 3D models here!
 	if (!terrain.load("models\\heightmap.bmp", 10)) return false;
 	if (!road.load("models\\roadmap.bmp", 10)) return false;
+	if (!Lamp1.load("models\\street lamp - fancy.obj")) return false;
+	if (!Lamp2.load("models\\street lamp - fancy.obj")) return false;
+	if (!Lamp3.load("models\\street lamp - fancy.obj")) return false;
+	if (!Bulb1.load("models\\sphere.obj")) return false;
+	if (!Bulb2.load("models\\sphere.obj")) return false;
+	if (!Bulb3.load("models\\sphere.obj")) return false;
 
 	// Initialise the View Matrix (initial position of the camera)
 	matrixView = rotate(mat4(1), radians(12.f), vec3(1, 0, 0));
@@ -88,6 +96,8 @@ bool init()
 void renderScene(mat4& matrixView, float time, float deltaTime)
 {
 	mat4 m;
+	vec3 lampsize = vec3(0.025f, 0.025f, 0.025f);
+	vec3 bulbsize = vec3(0.015f, 0.015f, 0.015f);
 
 	// setup materials - green (grass)
 	program.sendUniform("material", vec3(0.2f, 0.8f, 0.2f));
@@ -103,6 +113,49 @@ void renderScene(mat4& matrixView, float time, float deltaTime)
 	m = translate(matrixView, vec3(0, 0, 0));
 	m = translate(m, vec3(6.0f, 0.01f, 0.0f));
 	road.render(m);
+
+	// setup materials - black
+	program.sendUniform("material", vec3(0, 0, 0));
+
+	//render lamp1
+	m = matrixView;
+	m = scale(m, vec3(lampsize));
+	m = translate(m, vec3(150, 140.0f, 770));
+	m = rotate(m, radians(10.0f), vec3(1, 0, 0));
+	Lamp1.render(m);
+
+	//render lamp2
+	m = matrixView;
+	m = scale(m, vec3(lampsize));
+	m = translate(m, vec3(270, 120, 100));
+	Lamp2.render(m);
+
+	//render lamp3
+	m = matrixView;
+	m = scale(m, vec3(lampsize));
+	m = translate(m, vec3(150, 180, -400));
+	Lamp3.render(m);
+
+	//setup materials - dark grey
+	program.sendUniform("material", vec3(0.15f, 0.15f, 0.15f));
+
+	//render Bulb1
+	m = matrixView;
+	m = scale(m, vec3(bulbsize));
+	m = translate(m, vec3(250, 440.0f, 1325));
+	Bulb1.render(m);
+
+	//render Bulb2
+	m = matrixView;
+	m = scale(m, vec3(bulbsize));
+	m = translate(m, vec3(450, 400, 170));
+	Bulb2.render(m);
+
+	//render Bulb3
+	m = matrixView;
+	m = scale(m, vec3(bulbsize));
+	m = translate(m, vec3(250, 500, -661));
+	Bulb3.render(m);
 }
 
 void onRender()

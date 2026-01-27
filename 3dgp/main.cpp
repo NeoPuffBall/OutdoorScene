@@ -4,6 +4,7 @@
 #include <GL/glut.h>
 #include <GL/freeglut_ext.h>
 
+
 // Include GLM core features
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
@@ -28,7 +29,10 @@ C3dglProgram program;
 // The View Matrix
 mat4 matrixView;
 
-vec3 diffuse = vec3(5.0f,5.0f,2.0f);
+vec3 diffuse = vec3(5.0f, 5.0f, 2.0f);
+
+bool sunrise = false;
+bool sunset = false;
 
 // Camera & navigation
 float maxspeed = 4.f;	// camera max speed
@@ -193,6 +197,29 @@ void renderScene(mat4& matrixView, float time, float deltaTime)
 	m = scale(m, vec3(bulbsize));
 	m = translate(m, vec3(250, 500, -661));
 	Bulb3.render(m);
+
+	if (diffuse.x >= 5 && diffuse.y >= 5 && diffuse.z >= 2)
+	{
+		sunrise = false;
+		sunset = true;
+	}
+	if (sunset)
+	{
+		diffuse.x -= 0.01;
+		diffuse.y -= 0.01;
+		diffuse.z -= 0.0035;
+	}
+	else if (diffuse.x <= 0 && diffuse.y <= 0 && diffuse.z <= 0)
+	{
+		sunrise = true;
+		sunset = false;
+	}
+	if (sunrise)
+	{
+		diffuse.x += 0.01;
+		diffuse.y += 0.01;
+		diffuse.z += 0.0035;
+	}
 
 }
 
@@ -399,10 +426,5 @@ int main(int argc, char **argv)
 	glutMainLoop();
 
 	return 1;
-}
-void DayCycle()
-{
-	diffuse.x -= 0.1;
-	diffuse.y -= 0.1;
 }
 

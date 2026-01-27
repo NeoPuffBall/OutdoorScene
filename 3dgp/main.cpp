@@ -19,15 +19,16 @@ C3dglTerrain terrain, road;
 C3dglModel Lamp1, Lamp2, Lamp3;
 C3dglModel Bulb1, Bulb2, Bulb3;
 
-C3dglBitmap grass;
 
-GLuint idTexgrass;
+GLuint idTexgrass, idTexroad;
 
 //GLSL Program
 C3dglProgram program;
 
 // The View Matrix
 mat4 matrixView;
+
+vec3 diffuse = vec3(5.0f,5.0f,2.0f);
 
 // Camera & navigation
 float maxspeed = 4.f;	// camera max speed
@@ -76,13 +77,31 @@ bool init()
 	if (!Bulb2.load("models\\sphere.obj")) return false;
 	if (!Bulb3.load("models\\sphere.obj")) return false;
 
+	C3dglBitmap grass, roadtxt;
+
+	// load textures
+	grass.load("models/grass.png", GL_RGBA);
+	if (!grass.getBits()) return false;
+	roadtxt.load("models/road.png", GL_RGBA);
+	if (!roadtxt.getBits()) return false;
+
 	glActiveTexture(GL_TEXTURE0);
 	glGenTextures(1, &idTexgrass);
 	glBindTexture(GL_TEXTURE_2D, idTexgrass);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, grass.getWidth(), grass.getHeight(), 0, GL_RGBA,
 		GL_UNSIGNED_BYTE, grass.getBits());
-	program.sendUniform("texture0",0);
+
+
+	glActiveTexture(GL_TEXTURE0);
+	glGenTextures(1, &idTexroad);
+	glBindTexture(GL_TEXTURE_2D, idTexroad);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, roadtxt.getWidth(), roadtxt.getHeight(), 0, GL_RGBA,
+		GL_UNSIGNED_BYTE, roadtxt.getBits());
+
+	program.sendUniform("texture0", 0);
+	
 
 	// Initialise the View Matrix (initial position of the camera)
 	matrixView = rotate(mat4(1), radians(12.f), vec3(1, 0, 0));
@@ -110,19 +129,22 @@ void renderScene(mat4& matrixView, float time, float deltaTime)
 	mat4 m;
 	vec3 lampsize = vec3(0.025f, 0.025f, 0.025f);
 	vec3 bulbsize = vec3(0.015f, 0.015f, 0.015f);
+	
 
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, idTexgrass);
 
 	// setup materials - green (grass)
-	program.sendUniform("materialDiffuse", vec3(0.2f, 0.8f, 0.2f));
+	//program.sendUniform("materialDiffuse", vec3(0.2f, 0.8f, 0.2f));
 
 	// render the terrain
 	m = translate(matrixView, vec3(0, 0, 0));
 	terrain.render(m);
 
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, idTexroad);
 	// setup materials - grey (road)
-	program.sendUniform("materialDiffuse", vec3(0.3f, 0.3f, 0.16f));
+	/*program.sendUniform("materialDiffuse", vec3(0.3f, 0.3f, 0.16f));*/
 
 	// render the road
 	m = translate(matrixView, vec3(0, 0, 0));
@@ -171,6 +193,7 @@ void renderScene(mat4& matrixView, float time, float deltaTime)
 	m = scale(m, vec3(bulbsize));
 	m = translate(m, vec3(250, 500, -661));
 	Bulb3.render(m);
+
 }
 
 void onRender()
@@ -193,8 +216,8 @@ void onRender()
 		-pitch, vec3(1, 0, 0))	// switch the pitch on
 		* matrixView;
 
-	program.sendUniform("lightDir.direction", vec3(1.0, 0.5, 1.0));
-	program.sendUniform("lightDir.diffuse", vec3(1, 1, 1));
+	program.sendUniform("lightDir.direction", vec3(0.4f, 0.5f, 0.9f));
+	program.sendUniform("lightDir.diffuse", diffuse);
 
 	program.sendUniform("lightPoint.position", vec3(250, 440.0f, 1325));
 	program.sendUniform("lightPoint.diffuse", vec3(1.0f, 1.0f, 1.0f));
@@ -376,5 +399,10 @@ int main(int argc, char **argv)
 	glutMainLoop();
 
 	return 1;
+}
+void DayCycle()
+{
+	diffuse.x -= 0.1;
+	diffuse.y -= 0.1;
 }
 

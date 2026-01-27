@@ -9,7 +9,7 @@ uniform mat4 matrixView;
 uniform mat4 matrixModelView;
 
 
-// Materials
+// Materials 
 uniform vec3 materialAmbient;
 uniform vec3 materialDiffuse;
 uniform vec3 materialSpecular;
@@ -19,9 +19,11 @@ uniform float shininess;
 in vec3 aVertex;
 in vec3 aNormal;
 in vec2 aTexCoord;
-out vec2 TexCoord0;
 
+out vec2 texCoord0;
 out vec4 color;
+
+
 vec4 position;
 vec3 normal;
 
@@ -73,8 +75,7 @@ color = vec4(0,0,0,0);
 color += DirectionalLight(lightDir);
 color += PointLight(lightPoint);
 
-TexCoord0 = aTexCoord;
-
+texCoord0 = aTexCoord;
 }
 
 

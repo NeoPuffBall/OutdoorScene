@@ -33,16 +33,16 @@ C3dglProgram program;
 mat4 matrixView;
 
 //Diffuse of directional light
-vec3 diffuse = vec3(5.0f, 5.0f, 2.0f);
+//5.0f, 5.0f, 2.0f
+vec3 diffuse = vec3(0.1f,0.1f,0.1f);
 //Diffuse of point light
-vec3 Pdiffuse = vec3(1.0f, 1.0f, 1.0f);
+vec3 Pdiffuse = vec3(3.0f, 3.0f, 3.0f);
 //Diffuse of view Matrix
 vec3 Mdiffuse = vec3(0.2f, 0.2f, 0.6f);
 
 bool sunrise = false;
 bool sunset = false;
 
-bool initsky = true;
 
 // Camera & navigation
 float maxspeed = 4.f;	// camera max speed
@@ -228,13 +228,23 @@ void renderScene(mat4& matrixView, float time, float deltaTime)
 	Lamp3.render(m);
 
 	//setup materials - dark grey
-	program.sendUniform("materialDiffuse", vec3(0.15f, 0.15f, 0.15f));
+	//program.sendUniform("materialDiffuse", vec3(0.15f, 0.15f, 0.15f));
+
+	if (diffuse.x < 1)
+	{
+		program.sendUniform("lightAmbient2.color", vec3(5.0f, 0.0f, 0.0f));
+		program.sendUniform("materialAmbient", vec3(1.0f,1.0f,1.0f));
+	}
 
 	//render Bulb1
 	m = matrixView;
 	m = scale(m, vec3(bulbsize));
 	m = translate(m, vec3(250, 440.0f, 1325));
 	Bulb1.render(m);
+
+	program.sendUniform("lightAmbient2.color", vec3(0.0f, 0.0f, 0.0f));
+
+	//program.sendUniform("lightAmbient3.color", vec3(0.0f, 5.0f, 0.0f));
 
 	//render Bulb2
 	m = matrixView;
@@ -248,7 +258,8 @@ void renderScene(mat4& matrixView, float time, float deltaTime)
 	m = translate(m, vec3(250, 500, -661));
 	Bulb3.render(m);
 
-	if (diffuse.x >= 5 && diffuse.y >= 5 && diffuse.z >= 2)
+	//Control day-night cycle
+	/*if (diffuse.x >= 5 && diffuse.y >= 5 && diffuse.z >= 2)
 	{
 		sunrise = false;
 		sunset = true;
@@ -269,7 +280,7 @@ void renderScene(mat4& matrixView, float time, float deltaTime)
 		diffuse.x += 0.01;
 		diffuse.y += 0.01;
 		diffuse.z += 0.0035;
-	}
+	}*/
 }
 
 void onRender()
@@ -297,10 +308,13 @@ void onRender()
 
 	program.sendUniform("lightPoint.position", vec3(250, 440.0f, 1325));
 	program.sendUniform("lightPoint.diffuse", Pdiffuse);
+	//program.sendUniform("att_quadratic", 0.3f);
+	//program.sendUniform("lightPoint.dist", 10.0f);
 	program.sendUniform("lightPoint2.position", vec3(450, 400, 170));
 	program.sendUniform("lightPoint2.diffuse", Pdiffuse);
 	program.sendUniform("lightPoint3.position", vec3(250, 500, -661));
-	program.sendUniform("lightPoint.diffuse", Pdiffuse);
+	program.sendUniform("lightPoint3.diffuse", Pdiffuse);
+
 	// setup View Matrix
 	program.sendUniform("matrixView", matrixView);
 	program.sendUniform("materialDiffuse", Mdiffuse);

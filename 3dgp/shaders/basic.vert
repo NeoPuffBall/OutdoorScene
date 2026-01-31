@@ -15,6 +15,8 @@ uniform vec3 materialDiffuse;
 uniform vec3 materialSpecular;
 uniform float shininess;
 
+//uniform float att_quadratic;
+//uniform float dist = 100.0f;
 
 in vec3 aVertex;
 in vec3 aNormal;
@@ -31,7 +33,7 @@ struct AMBIENT
 {
 vec3 color;
 };
-uniform AMBIENT lightAmbient;
+uniform AMBIENT lightAmbient, lightAmbient2, lightAmbient3;
 
 struct DIRECTIONAL
 {
@@ -71,8 +73,11 @@ vec4 color = vec4(0, 0, 0, 0);
 vec3 L = normalize((vec4(light.position,1) * matrixView) - position).xyz;
 float NdotL = dot(normal, L);
 color += vec4(materialDiffuse * light.diffuse, 1) * max(NdotL, 0);
+//float dist = length(matrixView * vec4(light.position, 1) - position);
+//float att = 1 / (att_quadratic * dist * dist);
 return color;
 }
+
 void main(void)
 {
 
@@ -85,8 +90,12 @@ normal = normalize(mat3(matrixModelView) * aNormal);
 // calculate light
 color = vec4(0,0,0,0);
 color += AmbientLight(lightAmbient);
+color += AmbientLight(lightAmbient2);
+color += AmbientLight(lightAmbient3);
 color += DirectionalLight(lightDir);
 color += PointLight(lightPoint);
+color += PointLight(lightPoint2);
+color += PointLight(lightPoint3);
 
 texCoord0 = aTexCoord;
 }

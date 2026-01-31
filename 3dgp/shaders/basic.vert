@@ -27,6 +27,12 @@ out vec4 color;
 vec4 position;
 vec3 normal;
 
+struct AMBIENT
+{
+vec3 color;
+};
+uniform AMBIENT lightAmbient;
+
 struct DIRECTIONAL
 {
 vec3 direction;
@@ -40,7 +46,13 @@ vec3 position;
 vec3 diffuse;
 vec3 specular;
 };
-uniform POINT lightPoint;
+uniform POINT lightPoint, lightPoint2, lightPoint3;
+
+vec4 AmbientLight(AMBIENT light)
+{
+// Calculate Ambient Light
+return vec4(materialAmbient * light.color, 1);
+}
 
 vec4 DirectionalLight(DIRECTIONAL light)
 {
@@ -72,6 +84,7 @@ normal = normalize(mat3(matrixModelView) * aNormal);
 
 // calculate light
 color = vec4(0,0,0,0);
+color += AmbientLight(lightAmbient);
 color += DirectionalLight(lightDir);
 color += PointLight(lightPoint);
 

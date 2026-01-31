@@ -23,16 +23,26 @@ C3dglModel Bulb1, Bulb2, Bulb3;
 
 GLuint idTexgrass, idTexroad;
 
+//Skyboxes
+C3dglSkyBox Day,Night;
+
 //GLSL Program
 C3dglProgram program;
 
 // The View Matrix
 mat4 matrixView;
 
+//Diffuse of directional light
 vec3 diffuse = vec3(5.0f, 5.0f, 2.0f);
+//Diffuse of point light
+vec3 Pdiffuse = vec3(1.0f, 1.0f, 1.0f);
+//Diffuse of view Matrix
+vec3 Mdiffuse = vec3(0.2f, 0.2f, 0.6f);
 
 bool sunrise = false;
 bool sunset = false;
+
+bool initsky = true;
 
 // Camera & navigation
 float maxspeed = 4.f;	// camera max speed
@@ -81,6 +91,23 @@ bool init()
 	if (!Bulb2.load("models\\sphere.obj")) return false;
 	if (!Bulb3.load("models\\sphere.obj")) return false;
 
+	//Load skyboxes
+	if (!Day.load("models/TropicalSunnyDay/TropicalSunnyDayFront1024.jpg",
+		"models/TropicalSunnyDay/TropicalSunnyDayLeft1024.jpg",
+		"models/TropicalSunnyDay/TropicalSunnyDayBack1024.jpg",
+		"models/TropicalSunnyDay/TropicalSunnyDayRight1024.jpg",
+		"models/TropicalSunnyDay/TropicalSunnyDayUp1024.jpg",
+		"models/TropicalSunnyDay/TropicalSunnyDayDown1024.jpg", 0))
+		return false;
+
+	if (!Night.load("models/FullMoon/FullMoonFront2048.png",
+		"models/FullMoon/FullMoonLeft2048.png",
+		"models/FullMoon/FullMoonBack2048.png",
+		"models/FullMoon/FullMoonRight2048.png",
+		"models/FullMoon/FullMoonUp2048.png",
+		"models/FullMoon/FullMoonDown2048.png", 0))
+		return false;
+
 	C3dglBitmap grass, roadtxt;
 
 	// load textures
@@ -113,9 +140,9 @@ bool init()
 		vec3(4.0, 1.5, 30.0),
 		vec3(4.0, 1.5, 0.0),
 		vec3(0.0, 1.0, 0.0));
-
+	
 	// setup the screen background colour
-	glClearColor(0.2f, 0.6f, 1.f, 1.0f);   // blue sky background
+	//glClearColor(0.2f, 0.6f, 1.f, 1.0f);   // blue sky background
 
 	cout << endl;
 	cout << "Use:" << endl;
@@ -135,20 +162,43 @@ void renderScene(mat4& matrixView, float time, float deltaTime)
 	vec3 bulbsize = vec3(0.015f, 0.015f, 0.015f);
 	
 
+	if (diffuse.x > 1)
+	{
+		program.sendUniform("lightAmbient.color", vec3(1.0f, 1.0f, 1.0f));
+		program.sendUniform("materialAmbient", vec3(1.0f, 1.0f, 1.0f));
+		program.sendUniform("materialDiffuse", vec3(0.0f, 0.0f, 0.0f));
+
+		//Render the skybox
+		m = matrixView;
+		Day.render(m);
+
+		program.sendUniform("lightAmbient.color", vec3(0.0, 0.0, 0.0));
+	}
+	else
+	{
+		program.sendUniform("lightAmbient.color", vec3(1.0f, 1.0f, 1.0f));
+		program.sendUniform("materialAmbient", vec3(1.0f, 1.0f, 1.0f));
+		program.sendUniform("materialDiffuse", vec3(0.0f, 0.0f, 0.0f));
+
+		//Render the skybox
+		m = matrixView;
+		Night.render(m);
+
+		program.sendUniform("lightAmbient.color", vec3(0.0, 0.0, 0.0));
+	}
+
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, idTexgrass);
+	
+	program.sendUniform("materialDiffuse", Mdiffuse);
 
-	// setup materials - green (grass)
-	//program.sendUniform("materialDiffuse", vec3(0.2f, 0.8f, 0.2f));
-
-	// render the terrain
+	//render the terrain
 	m = translate(matrixView, vec3(0, 0, 0));
 	terrain.render(m);
 
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, idTexroad);
-	// setup materials - grey (road)
-	/*program.sendUniform("materialDiffuse", vec3(0.3f, 0.3f, 0.16f));*/
+
 
 	// render the road
 	m = translate(matrixView, vec3(0, 0, 0));
@@ -209,7 +259,7 @@ void renderScene(mat4& matrixView, float time, float deltaTime)
 		diffuse.y -= 0.01;
 		diffuse.z -= 0.0035;
 	}
-	else if (diffuse.x <= 0 && diffuse.y <= 0 && diffuse.z <= 0)
+	if (diffuse.x <= 0.01 && diffuse.y <= 0.01 && diffuse.z <= 0.0035)
 	{
 		sunrise = true;
 		sunset = false;
@@ -220,7 +270,6 @@ void renderScene(mat4& matrixView, float time, float deltaTime)
 		diffuse.y += 0.01;
 		diffuse.z += 0.0035;
 	}
-
 }
 
 void onRender()
@@ -247,10 +296,14 @@ void onRender()
 	program.sendUniform("lightDir.diffuse", diffuse);
 
 	program.sendUniform("lightPoint.position", vec3(250, 440.0f, 1325));
-	program.sendUniform("lightPoint.diffuse", vec3(1.0f, 1.0f, 1.0f));
+	program.sendUniform("lightPoint.diffuse", Pdiffuse);
+	program.sendUniform("lightPoint2.position", vec3(450, 400, 170));
+	program.sendUniform("lightPoint2.diffuse", Pdiffuse);
+	program.sendUniform("lightPoint3.position", vec3(250, 500, -661));
+	program.sendUniform("lightPoint.diffuse", Pdiffuse);
 	// setup View Matrix
 	program.sendUniform("matrixView", matrixView);
-	program.sendUniform("materialDiffuse", vec3(0.2, 0.2, 0.6));
+	program.sendUniform("materialDiffuse", Mdiffuse);
 
 	// move the camera up following the profile of terrain (Y coordinate of the terrain)
 	float terrainY = -terrain.getInterpolatedHeight(inverse(matrixView)[3][0], inverse(matrixView)[3][2]);

@@ -34,15 +34,19 @@ mat4 matrixView;
 
 //Diffuse of directional light
 //5.0f, 5.0f, 2.0f
-vec3 diffuse = vec3(0.1f,0.1f,0.1f);
-//Diffuse of point light
-vec3 Pdiffuse = vec3(3.0f, 3.0f, 3.0f);
+vec3 diffuse = vec3(5.0f, 5.0f, 2.0f);
+//Diffuse of 1st point light
+vec3 Pdiffuse = vec3(2.0f, 0.5f, 0.5f);
+//Diffuse of 2nd point light
+vec3 Pdiffuse2 = vec3(0.5f, 2.0f, 0.5f);
+//Diffuse of 3rd point light
+vec3 Pdiffuse3 = vec3(0.5f, 0.5f, 2.0f);
 //Diffuse of view Matrix
 vec3 Mdiffuse = vec3(0.2f, 0.2f, 0.6f);
 
 bool sunrise = false;
 bool sunset = false;
-
+bool cycle = false;
 
 // Camera & navigation
 float maxspeed = 4.f;	// camera max speed
@@ -150,6 +154,7 @@ bool init()
 	cout << "  QE or PgUp/Dn to move the camera up and down" << endl;
 	cout << "  Shift to speed up your movement" << endl;
 	cout << "  Drag the mouse to look around" << endl;
+	cout << "  C to turn on/off the day/night cycle" << endl;
 	cout << endl;
 
 	return true;
@@ -162,7 +167,7 @@ void renderScene(mat4& matrixView, float time, float deltaTime)
 	vec3 bulbsize = vec3(0.015f, 0.015f, 0.015f);
 	
 
-	if (diffuse.x > 1)
+	if (diffuse.x >= 1)
 	{
 		program.sendUniform("lightAmbient.color", vec3(1.0f, 1.0f, 1.0f));
 		program.sendUniform("materialAmbient", vec3(1.0f, 1.0f, 1.0f));
@@ -227,13 +232,16 @@ void renderScene(mat4& matrixView, float time, float deltaTime)
 	m = translate(m, vec3(150, 180, -400));
 	Lamp3.render(m);
 
-	//setup materials - dark grey
-	//program.sendUniform("materialDiffuse", vec3(0.15f, 0.15f, 0.15f));
 
 	if (diffuse.x < 1)
 	{
 		program.sendUniform("lightAmbient2.color", vec3(5.0f, 0.0f, 0.0f));
 		program.sendUniform("materialAmbient", vec3(1.0f,1.0f,1.0f));
+		program.sendUniform("lightPoint.diffuse", vec3(Pdiffuse));
+	}
+	else
+	{
+		program.sendUniform("lightPoint.diffuse", vec3(0, 0, 0));
 	}
 
 	//render Bulb1
@@ -244,7 +252,15 @@ void renderScene(mat4& matrixView, float time, float deltaTime)
 
 	program.sendUniform("lightAmbient2.color", vec3(0.0f, 0.0f, 0.0f));
 
-	//program.sendUniform("lightAmbient3.color", vec3(0.0f, 5.0f, 0.0f));
+	if (diffuse.x < 1)
+	{
+		program.sendUniform("lightAmbient3.color", vec3(0.0f, 5.0f, 0.0f));
+		program.sendUniform("lightPoint2.diffuse", Pdiffuse2);
+	}
+	else
+	{
+		program.sendUniform("lightPoint2.diffuse", vec3(0, 0, 0));
+	}
 
 	//render Bulb2
 	m = matrixView;
@@ -252,35 +268,58 @@ void renderScene(mat4& matrixView, float time, float deltaTime)
 	m = translate(m, vec3(450, 400, 170));
 	Bulb2.render(m);
 
+	program.sendUniform("lightAmbient3.color", vec3(0.0f, 0.0f, 0.0f));
+
+	if (diffuse.x < 1)
+	{
+		program.sendUniform("lightAmbient4.color", vec3(0.0f, 0.0f, 5.0f));
+		program.sendUniform("lightPoint3.diffuse", Pdiffuse3);
+	}
+	else
+	{
+		program.sendUniform("lightPoint3.diffuse", vec3(0,0,0));
+	}
+
 	//render Bulb3
 	m = matrixView;
 	m = scale(m, vec3(bulbsize));
 	m = translate(m, vec3(250, 500, -661));
 	Bulb3.render(m);
 
+	program.sendUniform("lightAmbient4.color", vec3(0.0f, 0.0f, 0.0f));
+
+	//m = matrixView;
+	//m = translate(m, vec3(3.75, 7.5, -10));
+	//m = scale(m, vec3(0.5f, 0.5f, 0.5f));
+	//program.sendUniform("matrixModelView", m);
+	//glutSolidSphere(1, 32, 32);
+
 	//Control day-night cycle
-	/*if (diffuse.x >= 5 && diffuse.y >= 5 && diffuse.z >= 2)
+	if (cycle)
 	{
-		sunrise = false;
-		sunset = true;
+		if (diffuse.x >= 5 && diffuse.y >= 5 && diffuse.z >= 2)
+		{
+			sunrise = false;
+			sunset = true;
+		}
+		if (sunset)
+		{
+			diffuse.x -= 0.005;
+			diffuse.y -= 0.005;
+			diffuse.z -= 0.00175;
+		}
+		if (diffuse.x <= 0.01 && diffuse.y <= 0.01 && diffuse.z <= 0.0035)
+		{
+			sunrise = true;
+			sunset = false;
+		}
+		if (sunrise)
+		{
+			diffuse.x += 0.005;
+			diffuse.y += 0.005;
+			diffuse.z += 0.00175;
+		}
 	}
-	if (sunset)
-	{
-		diffuse.x -= 0.01;
-		diffuse.y -= 0.01;
-		diffuse.z -= 0.0035;
-	}
-	if (diffuse.x <= 0.01 && diffuse.y <= 0.01 && diffuse.z <= 0.0035)
-	{
-		sunrise = true;
-		sunset = false;
-	}
-	if (sunrise)
-	{
-		diffuse.x += 0.01;
-		diffuse.y += 0.01;
-		diffuse.z += 0.0035;
-	}*/
 }
 
 void onRender()
@@ -306,14 +345,12 @@ void onRender()
 	program.sendUniform("lightDir.direction", vec3(0.4f, 0.5f, 0.9f));
 	program.sendUniform("lightDir.diffuse", diffuse);
 
-	program.sendUniform("lightPoint.position", vec3(250, 440.0f, 1325));
-	program.sendUniform("lightPoint.diffuse", Pdiffuse);
-	//program.sendUniform("att_quadratic", 0.3f);
-	//program.sendUniform("lightPoint.dist", 10.0f);
-	program.sendUniform("lightPoint2.position", vec3(450, 400, 170));
-	program.sendUniform("lightPoint2.diffuse", Pdiffuse);
-	program.sendUniform("lightPoint3.position", vec3(250, 500, -661));
-	program.sendUniform("lightPoint3.diffuse", Pdiffuse);
+	program.sendUniform("lightPoint.position", vec3(3.75, 6.55, 19.80));
+	program.sendUniform("quad", 0.001f);
+	program.sendUniform("lightPoint2.position", vec3(6.75, 6, 2.5));
+	program.sendUniform("quad", 0.001f);
+	program.sendUniform("lightPoint3.position", vec3(3.75, 7.5, -10));
+	program.sendUniform("quad", 0.001f);
 
 	// setup View Matrix
 	program.sendUniform("matrixView", matrixView);
@@ -358,6 +395,19 @@ void onKeyDown(unsigned char key, int x, int y)
 	case 'd': _acc.x = -accel; break;
 	case 'e': _acc.y = accel; break;
 	case 'q': _acc.y = -accel; break;
+	case 'c':
+	{
+		if (!cycle) 
+		{
+			cycle = true;
+			cout << "Day/Night Cycle: On" << endl;
+		}
+		else
+		{
+			cycle = false;
+			cout << "Day/Night Cycle: Off" << endl;
+		}
+	} 
 	}
 }
 
